@@ -1,5 +1,6 @@
 package com.example.projetoteste.database
 
+import android.content.Context
 import androidx.room.Database
 import androidx.room.RoomDatabase
 import com.example.projetoteste.dao.CotacaoDao
@@ -11,4 +12,10 @@ import com.example.projetoteste.model.User
 abstract class AppDatabase : RoomDatabase() {
     abstract fun userDao(): UserDao
     abstract fun cotacaoDao(): CotacaoDao
+
+    companion object {
+        fun getInstance(applicationContext: Context?): Any {
+            TODO("Not yet implemented")
+        }
+    }
 }
