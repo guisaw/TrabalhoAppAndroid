@@ -12,6 +12,12 @@
         android:supportsRtl="true"
         android:theme="@style/Theme.ProjetoTeste"
         tools:targetApi="31">
+
+        <!-- Adicione aqui o App ID do Google Mobile Ads -->
+        <meta-data
+            android:name="com.google.android.gms.ads.APPLICATION_ID"
+            android:value="ca-app-pub-5659457621120459~8940437666" />
+
         <activity
             android:name=".MainActivity"
             android:exported="true"

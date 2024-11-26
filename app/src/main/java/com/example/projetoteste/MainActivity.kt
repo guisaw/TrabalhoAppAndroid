@@ -219,7 +219,7 @@ fun UserScreen(viewModel: AppViewModel) {
         // Botão para adicionar um novo usuário
         Button(
             onClick = {
-                viewModel.adicionarUsuario(User(cpf = "123", email = "email@domain.com", nome = "João"))
+                    viewModel.adicionarUsuario(User(cpf = "123", email = "email@domain.com", nome = "João"))
             },
             modifier = Modifier.fillMaxWidth()
         ) {
