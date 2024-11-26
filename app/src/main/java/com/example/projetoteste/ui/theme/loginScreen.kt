@@ -21,16 +21,16 @@ class loginScreen {
     fun LoginScreen(viewModel: AppViewModel, onLoginSuccess: () -> Unit) {
         var email by remember { mutableStateOf("") }
         var senha by remember { mutableStateOf("") }
-        var emailError by remember { mutableStateOf(false) }
+        val emailError by remember { mutableStateOf(false) }
         var senhaError by remember { mutableStateOf(false) }
 
-        Column(modifier = Modifier.padding(16.dp)) {
+        Column() {
             TextField(
                 value = email,
                 onValueChange = { email = it },
                 label = { Text("E-mail") },
                 isError = emailError,
-                modifier = Modifier.fillMaxWidth()
+                //modifier = Modifier.fillMaxWidth()
             )
             if (emailError) {
                 Text("E-mail inválido", color = Color.Red)
@@ -41,7 +41,7 @@ class loginScreen {
                 onValueChange = { senha = it },
                 label = { Text("Senha") },
                 isError = senhaError,
-                modifier = Modifier.fillMaxWidth(),
+                //modifier = Modifier.fillMaxWidth(),
                 visualTransformation = PasswordVisualTransformation()
             )
             if (senhaError) {
@@ -57,7 +57,7 @@ class loginScreen {
                         senhaError = true  // Mostra erro se a senha for inválida
                     }
                 },
-                modifier = Modifier.fillMaxWidth()
+                //modifier = Modifier.fillMaxWidth()
             ) {
                 Text("Entrar")
             }

@@ -26,7 +26,8 @@ class MainActivity : ComponentActivity() {
     // Usando a ViewModel com a Factory
     private val appViewModel: AppViewModel by viewModels {
         ViewModelFactory(UserRepository(
-            AppDatabase.getInstance(applicationContext).userDao()
+            AppDatabase.getInstance(applicationContext).userDao(),
+            AppDatabase.getInstance(applicationContext).cotacaoDao(),
         ))
     }
 
@@ -119,7 +120,7 @@ fun CadastroScreen(viewModel: AppViewModel, onCadastroSuccess: () -> Unit) {
                 senhaError = !isValidPassword(senha)
 
                 if (!nomeError && !emailError && !cpfError && !senhaError) {
-                    val user = User(cpf = cpf, email = email, nome = nome, senha = senha)
+                    val user = User(cpf = cpf, email = email, nome = nome)
                     viewModel.adicionarUsuario(user)
                     onCadastroSuccess()
                 }
@@ -224,13 +225,5 @@ fun UserScreen(viewModel: AppViewModel) {
         ) {
             Text("Adicionar Usuário")
         }
-    }
-}
-
-@Preview(showBackground = true)
-@Composable
-fun DefaultPreview() {
-    ProjetoTesteTheme {
-        UserScreen(viewModel = AppViewModel(UserRepository(AppDatabase.getInstance(applicationContext).userDao())))
     }
 }

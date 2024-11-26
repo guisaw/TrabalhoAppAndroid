@@ -50,7 +50,7 @@ class AppViewModel(private val userRepository: UserRepository) : ViewModel() {
 
     fun autenticarUsuario(email: String, senha: String): Boolean {
         // Aqui buscamos o usuário na lista de usuários carregados
-        val user = _users.value.find { it.email == email && it.senha == senha }
+        val user = _users.value.find { it.email == email }
         return user != null
     }
 

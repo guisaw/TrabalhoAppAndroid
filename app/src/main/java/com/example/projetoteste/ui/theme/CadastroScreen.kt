@@ -98,7 +98,7 @@ fun CadastroScreen(viewModel: AppViewModel, onCadastroSuccess: () -> Unit) {
                 senhaError = !isValidPassword(senha)
 
                 if (!nomeError && !emailError && !cpfError && !senhaError) {
-                    val user = User(cpf = cpf, email = email, nome = nome, senha = senha)
+                    val user = User(cpf = cpf, email = email, nome = nome)
                     viewModel.adicionarUsuario(user)
                     onCadastroSuccess()
                 }
@@ -117,10 +117,4 @@ fun CadastroScreen(viewModel: AppViewModel, onCadastroSuccess: () -> Unit) {
             Text("Já tenho cadastro")
         }
     }
-}
-
-@Preview(showBackground = true)
-@Composable
-fun CadastroScreenPreview() {
-    CadastroScreen(viewModel = AppViewModel(UserRepository()), onCadastroSuccess = {})
 }
