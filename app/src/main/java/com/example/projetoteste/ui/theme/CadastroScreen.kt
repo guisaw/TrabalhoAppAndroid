@@ -6,14 +6,16 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.input.PasswordVisualTransformation
-import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
-import com.example.projetoteste.database.Repository.UserRepository
 import com.example.projetoteste.model.User
 import com.example.projetoteste.viewmodel.AppViewModel
 
 @Composable
-fun CadastroScreen(viewModel: AppViewModel, onCadastroSuccess: () -> Unit) {
+fun CadastroScreen(
+    viewModel: AppViewModel,
+    onCadastroSuccess: () -> Unit,
+    onNavigateToLogin: () -> Unit // Função de navegação para a tela de login
+) {
     var nome by remember { mutableStateOf("") }
     var email by remember { mutableStateOf("") }
     var cpf by remember { mutableStateOf("") }
@@ -111,7 +113,7 @@ fun CadastroScreen(viewModel: AppViewModel, onCadastroSuccess: () -> Unit) {
         Spacer(modifier = Modifier.height(16.dp))
 
         Button(
-            onClick = { /* Navegar para a tela de login */ },
+            onClick = { onNavigateToLogin() }, // Navegação para a tela de login
             modifier = Modifier.fillMaxWidth()
         ) {
             Text("Já tenho cadastro")

@@ -1,12 +1,11 @@
 package com.example.projetoteste
 
 import android.os.Bundle
+import android.util.Patterns
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.viewModels
 import androidx.compose.foundation.layout.*
-import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.items
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
@@ -36,16 +35,25 @@ class MainActivity : ComponentActivity() {
 
         setContent {
             ProjetoTesteTheme {
-                var isLoginScreen by remember { mutableStateOf(false) }
+                var isLoginScreen by remember { mutableStateOf(true) }
+                var userNome by remember { mutableStateOf("") }
 
                 // Navegação entre Cadastro e Login
                 if (isLoginScreen) {
-                    LoginScreen(viewModel = appViewModel, onLoginSuccess = {
-                        // Ação após login bem-sucedido
-                    })
+                    LoginScreen(
+                        viewModel = appViewModel,
+                        onLoginSuccess = { nome ->
+                            // Redireciona para a HomeScreen passando o nome do usuário
+                            userNome = nome
+                            isLoginScreen = false
+                        },
+                        onNavigateToCadastro = {
+                            // Navegar para a tela de cadastro
+                            isLoginScreen = false
+                        }
+                    )
                 } else {
-                    CadastroScreen(viewModel = appViewModel, onCadastroSuccess = {
-                        // Navega para a tela de login
+                    HomeScreen(nome = userNome, onLogout = {
                         isLoginScreen = true
                     })
                 }
@@ -55,94 +63,11 @@ class MainActivity : ComponentActivity() {
 }
 
 @Composable
-fun CadastroScreen(viewModel: AppViewModel, onCadastroSuccess: () -> Unit) {
-    var nome by remember { mutableStateOf("") }
-    var email by remember { mutableStateOf("") }
-    var cpf by remember { mutableStateOf("") }
-    var senha by remember { mutableStateOf("") }
-
-    var nomeError by remember { mutableStateOf(false) }
-    var emailError by remember { mutableStateOf(false) }
-    var cpfError by remember { mutableStateOf(false) }
-    var senhaError by remember { mutableStateOf(false) }
-
-    Column(modifier = Modifier.padding(16.dp)) {
-        TextField(
-            value = nome,
-            onValueChange = { nome = it },
-            label = { Text("Nome") },
-            isError = nomeError,
-            modifier = Modifier.fillMaxWidth()
-        )
-        if (nomeError) {
-            Text("Nome inválido", color = Color.Red)
-        }
-
-        TextField(
-            value = email,
-            onValueChange = { email = it },
-            label = { Text("E-mail") },
-            isError = emailError,
-            modifier = Modifier.fillMaxWidth()
-        )
-        if (emailError) {
-            Text("E-mail inválido", color = Color.Red)
-        }
-
-        TextField(
-            value = cpf,
-            onValueChange = { cpf = it },
-            label = { Text("CPF") },
-            isError = cpfError,
-            modifier = Modifier.fillMaxWidth()
-        )
-        if (cpfError) {
-            Text("CPF inválido", color = Color.Red)
-        }
-
-        TextField(
-            value = senha,
-            onValueChange = { senha = it },
-            label = { Text("Senha") },
-            isError = senhaError,
-            modifier = Modifier.fillMaxWidth(),
-            visualTransformation = PasswordVisualTransformation()
-        )
-        if (senhaError) {
-            Text("Senha inválida", color = Color.Red)
-        }
-
-        Button(
-            onClick = {
-                nomeError = !isValidName(nome)
-                emailError = !isValidEmail(email)
-                cpfError = !isValidCPF(cpf)
-                senhaError = !isValidPassword(senha)
-
-                if (!nomeError && !emailError && !cpfError && !senhaError) {
-                    val user = User(cpf = cpf, email = email, nome = nome)
-                    viewModel.adicionarUsuario(user)
-                    onCadastroSuccess()
-                }
-            },
-            modifier = Modifier.fillMaxWidth()
-        ) {
-            Text("Cadastrar")
-        }
-
-        Spacer(modifier = Modifier.height(16.dp))
-
-        Button(
-            onClick = { /* Navegar para a tela de login */ },
-            modifier = Modifier.fillMaxWidth()
-        ) {
-            Text("Já tenho cadastro")
-        }
-    }
-}
-
-@Composable
-fun LoginScreen(viewModel: AppViewModel, onLoginSuccess: () -> Unit) {
+fun LoginScreen(
+    viewModel: AppViewModel,
+    onLoginSuccess: (String) -> Unit, // Passa o nome do usuário para a próxima tela
+    onNavigateToCadastro: () -> Unit // Função de navegação para a tela de cadastro
+) {
     var email by remember { mutableStateOf("") }
     var senha by remember { mutableStateOf("") }
     var emailError by remember { mutableStateOf(false) }
@@ -157,7 +82,7 @@ fun LoginScreen(viewModel: AppViewModel, onLoginSuccess: () -> Unit) {
             modifier = Modifier.fillMaxWidth()
         )
         if (emailError) {
-            Text("E-mail inválido", color = Color.Red)
+            Text("E-mail inválido", color = MaterialTheme.colorScheme.error)
         }
 
         TextField(
@@ -169,14 +94,16 @@ fun LoginScreen(viewModel: AppViewModel, onLoginSuccess: () -> Unit) {
             visualTransformation = PasswordVisualTransformation()
         )
         if (senhaError) {
-            Text("Senha inválida", color = Color.Red)
+            Text("Senha inválida", color = MaterialTheme.colorScheme.error)
         }
 
         Button(
             onClick = {
-                val valid = viewModel.autenticarUsuario(email, senha)
-                if (valid) {
-                    onLoginSuccess()
+                val user = viewModel.autenticarUsuario(email, senha)
+                if (user != null) {
+                    // Garantir que o nome não seja nulo
+                    val nome = user ?: "Usuário"
+                    onLoginSuccess(nome.toString()) // Passa o nome para a HomeScreen
                 } else {
                     senhaError = true
                 }
@@ -185,45 +112,33 @@ fun LoginScreen(viewModel: AppViewModel, onLoginSuccess: () -> Unit) {
         ) {
             Text("Entrar")
         }
+
+        Spacer(modifier = Modifier.height(16.dp))
+
+        Button(
+            onClick = onNavigateToCadastro, // Navegar para a tela de cadastro
+            modifier = Modifier.fillMaxWidth()
+        ) {
+            Text("Cadastrar")
+        }
     }
 }
 
-fun isValidName(name: String): Boolean {
-    return name.isNotBlank() && name.all { it.isLetter() } && name[0].isUpperCase()
-}
-
-fun isValidEmail(email: String): Boolean {
-    return android.util.Patterns.EMAIL_ADDRESS.matcher(email).matches()
-}
-
-fun isValidCPF(cpf: String): Boolean {
-    return cpf.length == 11 && cpf.all { it.isDigit() }
-}
-
-fun isValidPassword(password: String): Boolean {
-    return password.length >= 8 && password.any { it.isDigit() } && password.any { it.isUpperCase() }
-}
-
 @Composable
-fun UserScreen(viewModel: AppViewModel) {
-    val users by viewModel.users.collectAsState(initial = emptyList())
-
+fun HomeScreen(nome: String, onLogout: () -> Unit) {
     Column(modifier = Modifier.fillMaxSize().padding(16.dp)) {
-        // Exibição da lista de usuários
-        LazyColumn(modifier = Modifier.weight(1f)) {
-            items(users) { user ->
-                Text(user.nome)
-            }
-        }
+        Text(
+            text = "Bem-vindo, ${nome.ifEmpty { "Usuário" }}!",  // Garantir que, se o nome estiver vazio, mostre "Usuário"
+            style = MaterialTheme.typography.headlineLarge, // Usando o estilo correto para o título
+            modifier = Modifier.padding(top = 16.dp)
+        )
 
-        // Botão para adicionar um novo usuário
+        // Botão para sair e voltar para a tela de login
         Button(
-            onClick = {
-                    viewModel.adicionarUsuario(User(cpf = "123", email = "email@domain.com", nome = "João"))
-            },
-            modifier = Modifier.fillMaxWidth()
+            onClick = { onLogout() }, // Faz a navegação de volta para o login
+            modifier = Modifier.fillMaxWidth().padding(top = 20.dp)
         ) {
-            Text("Adicionar Usuário")
+            Text("Sair")
         }
     }
 }
