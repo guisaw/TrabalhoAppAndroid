@@ -1,7 +1,6 @@
 package com.example.projetoteste
 
 import android.os.Bundle
-import android.util.Patterns
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.viewModels
@@ -9,13 +8,14 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.input.PasswordVisualTransformation
-import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import androidx.navigation.compose.NavHost
+import androidx.navigation.compose.composable
+import androidx.navigation.compose.rememberNavController
 import com.example.projetoteste.database.AppDatabase
 import com.example.projetoteste.database.Repository.UserRepository
-import com.example.projetoteste.model.User
+import com.example.projetoteste.ui.UserListScreen
 import com.example.projetoteste.ui.theme.ProjetoTesteTheme
 import com.example.projetoteste.viewmodel.AppViewModel
 import com.example.projetoteste.viewmodel.ViewModelFactory
@@ -24,10 +24,12 @@ class MainActivity : ComponentActivity() {
 
     // Usando a ViewModel com a Factory
     private val appViewModel: AppViewModel by viewModels {
-        ViewModelFactory(UserRepository(
-            AppDatabase.getInstance(applicationContext).userDao(),
-            AppDatabase.getInstance(applicationContext).cotacaoDao(),
-        ))
+        ViewModelFactory(
+            UserRepository(
+                AppDatabase.getInstance(applicationContext).userDao(),
+                AppDatabase.getInstance(applicationContext).cotacaoDao(),
+            )
+        )
     }
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -38,7 +40,6 @@ class MainActivity : ComponentActivity() {
                 var isLoginScreen by remember { mutableStateOf(true) }
                 var userNome by remember { mutableStateOf("") }
 
-                // Navegação entre Cadastro e Login
                 if (isLoginScreen) {
                     LoginScreen(
                         viewModel = appViewModel,
@@ -53,9 +54,24 @@ class MainActivity : ComponentActivity() {
                         }
                     )
                 } else {
-                    HomeScreen(nome = userNome, onLogout = {
-                        isLoginScreen = true
-                    })
+                    val navController = rememberNavController()
+                    NavHost(
+                        navController = navController,
+                        startDestination = "home"
+                    ) {
+                        composable("home") {
+                            HomeScreen(
+                                nome = userNome,
+                                onLogout = { isLoginScreen = true },
+                                onNavigateToUsers = { navController.navigate("users") }
+                            )
+                        }
+                        composable("users") {
+                            UserListScreen(
+                                onNavigateBack = { navController.popBackStack() }
+                            )
+                        }
+                    }
                 }
             }
         }
@@ -65,8 +81,8 @@ class MainActivity : ComponentActivity() {
 @Composable
 fun LoginScreen(
     viewModel: AppViewModel,
-    onLoginSuccess: (String) -> Unit, // Passa o nome do usuário para a próxima tela
-    onNavigateToCadastro: () -> Unit // Função de navegação para a tela de cadastro
+    onLoginSuccess: (String) -> Unit,
+    onNavigateToCadastro: () -> Unit
 ) {
     var email by remember { mutableStateOf("") }
     var senha by remember { mutableStateOf("") }
@@ -101,9 +117,8 @@ fun LoginScreen(
             onClick = {
                 val user = viewModel.autenticarUsuario(email, senha)
                 if (user != null) {
-                    // Garantir que o nome não seja nulo
                     val nome = user ?: "Usuário"
-                    onLoginSuccess(nome.toString()) // Passa o nome para a HomeScreen
+                    onLoginSuccess(nome.toString())
                 } else {
                     senhaError = true
                 }
@@ -116,7 +131,7 @@ fun LoginScreen(
         Spacer(modifier = Modifier.height(16.dp))
 
         Button(
-            onClick = onNavigateToCadastro, // Navegar para a tela de cadastro
+            onClick = onNavigateToCadastro,
             modifier = Modifier.fillMaxWidth()
         ) {
             Text("Cadastrar")
@@ -125,17 +140,23 @@ fun LoginScreen(
 }
 
 @Composable
-fun HomeScreen(nome: String, onLogout: () -> Unit) {
+fun HomeScreen(nome: String, onLogout: () -> Unit, onNavigateToUsers: () -> Unit) {
     Column(modifier = Modifier.fillMaxSize().padding(16.dp)) {
         Text(
-            text = "Bem-vindo, ${nome.ifEmpty { "Usuário" }}!",  // Garantir que, se o nome estiver vazio, mostre "Usuário"
-            style = MaterialTheme.typography.headlineLarge, // Usando o estilo correto para o título
+            text = "Bem-vindo, ${nome.ifEmpty { "Usuário" }}!",
+            style = MaterialTheme.typography.headlineLarge,
             modifier = Modifier.padding(top = 16.dp)
         )
 
-        // Botão para sair e voltar para a tela de login
         Button(
-            onClick = { onLogout() }, // Faz a navegação de volta para o login
+            onClick = onNavigateToUsers,
+            modifier = Modifier.fillMaxWidth().padding(top = 20.dp)
+        ) {
+            Text("Usuários Cadastrados")
+        }
+
+        Button(
+            onClick = { onLogout() },
             modifier = Modifier.fillMaxWidth().padding(top = 20.dp)
         ) {
             Text("Sair")

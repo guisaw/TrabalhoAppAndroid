@@ -62,4 +62,5 @@ class AppViewModel(private val userRepository: UserRepository) : ViewModel() {
         // cotacaoRepository.addCotacao(cotacao)
         // carregarCotacoes()  // Recarrega as cotações após adicionar
     }
+
 }
