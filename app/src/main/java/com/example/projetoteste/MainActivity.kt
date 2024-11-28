@@ -1,5 +1,6 @@
 package com.example.projetoteste
 
+import android.content.Intent
 import android.net.Uri
 import android.os.Bundle
 import android.util.Patterns
@@ -35,6 +36,15 @@ class MainActivity : ComponentActivity() {
                 AppDatabase.getInstance(applicationContext).cotacaoDao(),
             )
         )
+    }
+
+    private fun shareUser(user: String) {
+        val intent = Intent().apply {
+            action = Intent.ACTION_SEND
+            putExtra(Intent.EXTRA_TEXT, user)
+            type = "text/plain"
+        }
+        startActivity(Intent.createChooser(intent, "Compartilhar Usuário"))
     }
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -90,7 +100,8 @@ class MainActivity : ComponentActivity() {
 
                     composable("users") {
                         UserListScreen(
-                            onNavigateBack = { navController.popBackStack() }
+                            onNavigateBack = { navController.popBackStack() },
+                            onShareUser = { user -> shareUser(user) }
                         )
                     }
                 }
