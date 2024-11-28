@@ -1,122 +1,116 @@
-package com.example.projetoteste.ui
+package com.example.projetoteste
 
 import androidx.compose.foundation.layout.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.unit.dp
-import com.example.projetoteste.model.User
-import com.example.projetoteste.viewmodel.AppViewModel
+import android.util.Patterns
+import com.example.projetoteste.utils.isValidCpf
 
 @Composable
 fun CadastroScreen(
-    viewModel: AppViewModel,
-    onCadastroSuccess: () -> Unit,
-    onNavigateToLogin: () -> Unit // Função de navegação para a tela de login
+    onCadastroConcluido: () -> Unit,
+    onNavigateToLogin: () -> Unit
 ) {
     var nome by remember { mutableStateOf("") }
     var email by remember { mutableStateOf("") }
     var cpf by remember { mutableStateOf("") }
     var senha by remember { mutableStateOf("") }
-
-    var nomeError by remember { mutableStateOf(false) }
     var emailError by remember { mutableStateOf(false) }
     var cpfError by remember { mutableStateOf(false) }
-    var senhaError by remember { mutableStateOf(false) }
 
-    // Funções de validação
-    fun isValidName(name: String): Boolean {
-        return name.isNotEmpty() && name.all { it.isLetter() || it.isWhitespace() } && name[0].isUpperCase()
-    }
-
+    // Função de validação de email
     fun isValidEmail(email: String): Boolean {
-        return android.util.Patterns.EMAIL_ADDRESS.matcher(email).matches()
+        return Patterns.EMAIL_ADDRESS.matcher(email).matches()
     }
 
-    fun isValidCPF(cpf: String): Boolean {
-        return cpf.length == 11 && cpf.all { it.isDigit() }
+    // Função de validação de CPF
+    fun isValidCpf(cpf: String): Boolean {
+        return cpf.isValidCpf()  // Certifique-se de que o utilitário 'isValidCpf' está implementado corretamente
     }
 
-    fun isValidPassword(password: String): Boolean {
-        val minLength = password.length >= 8
-        val hasUpperCase = password.any { it.isUpperCase() }
-        val hasDigit = password.any { it.isDigit() }
-        return minLength && hasUpperCase && hasDigit
+    // Função que valida o formulário
+    fun isFormValid(): Boolean {
+        return isValidEmail(email) && isValidCpf(cpf) && senha.length >= 6
     }
 
     Column(modifier = Modifier.padding(16.dp)) {
+        // Campo Nome
         TextField(
             value = nome,
-            onValueChange = { nome = it },
+            onValueChange = { novoNome -> nome = novoNome.replaceFirstChar { it.uppercase() } },
             label = { Text("Nome") },
-            isError = nomeError,
             modifier = Modifier.fillMaxWidth()
         )
-        if (nomeError) {
-            Text("Nome inválido", color = Color.Red)
-        }
 
+        // Campo E-mail
         TextField(
             value = email,
-            onValueChange = { email = it },
+            onValueChange = {
+                email = it
+                emailError = !isValidEmail(email)
+            },
             label = { Text("E-mail") },
             isError = emailError,
             modifier = Modifier.fillMaxWidth()
         )
         if (emailError) {
-            Text("E-mail inválido", color = Color.Red)
+            Text("E-mail inválido", color = MaterialTheme.colorScheme.error, style = MaterialTheme.typography.bodySmall)
         }
 
+        // Campo CPF
         TextField(
             value = cpf,
-            onValueChange = { cpf = it },
+            onValueChange = {
+                cpf = it
+                cpfError = !isValidCpf(cpf)
+            },
             label = { Text("CPF") },
             isError = cpfError,
             modifier = Modifier.fillMaxWidth()
         )
         if (cpfError) {
-            Text("CPF inválido", color = Color.Red)
+            Text("CPF inválido", color = MaterialTheme.colorScheme.error, style = MaterialTheme.typography.bodySmall)
         }
 
+        // Campo Senha
         TextField(
             value = senha,
             onValueChange = { senha = it },
             label = { Text("Senha") },
-            isError = senhaError,
-            modifier = Modifier.fillMaxWidth(),
-            visualTransformation = PasswordVisualTransformation()
-        )
-        if (senhaError) {
-            Text("Senha inválida. A senha deve ter pelo menos 8 caracteres, uma letra maiúscula e um número.", color = Color.Red)
-        }
-
-        Button(
-            onClick = {
-                nomeError = !isValidName(nome)
-                emailError = !isValidEmail(email)
-                cpfError = !isValidCPF(cpf)
-                senhaError = !isValidPassword(senha)
-
-                if (!nomeError && !emailError && !cpfError && !senhaError) {
-                    val user = User(cpf = cpf, email = email, nome = nome)
-                    viewModel.adicionarUsuario(user)
-                    onCadastroSuccess()
-                }
-            },
+            visualTransformation = PasswordVisualTransformation(),
+            isError = senha.length < 6,
             modifier = Modifier.fillMaxWidth()
-        ) {
-            Text("Cadastrar")
+        )
+        if (senha.length < 6) {
+            Text("Senha deve ter pelo menos 6 caracteres", color = MaterialTheme.colorScheme.error, style = MaterialTheme.typography.bodySmall)
         }
 
         Spacer(modifier = Modifier.height(16.dp))
 
+        // Botão de Cadastro
         Button(
-            onClick = { onNavigateToLogin() }, // Navegação para a tela de login
+            onClick = {
+                if (isFormValid()) {
+                    onCadastroConcluido()  // Realiza o cadastro
+                }
+            },
+            modifier = Modifier.fillMaxWidth(),
+            enabled = isFormValid()  // Habilita o botão apenas se o formulário for válido
+        ) {
+            Text("Cadastrar")
+        }
+
+        Spacer(modifier = Modifier.height(8.dp))
+
+        // Botão para navegação ao Login
+        Button(
+            onClick = onNavigateToLogin,
             modifier = Modifier.fillMaxWidth()
         ) {
-            Text("Já tenho cadastro")
+            Text("Já sou cadastrado")
         }
     }
 }
